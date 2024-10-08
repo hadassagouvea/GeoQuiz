@@ -18,7 +18,6 @@ public class ColaActivity extends AppCompatActivity {
 
     private boolean mRespostaEVerdadeira;
     private TextView mTextViewResposta;
-    private Button mBotaoMostraResposta;
     private boolean mColou = false;  // registra se o usuário viu ou não a reposta (para recuperar o estado em caso de rotação
                                      // do dispositivo)
     @Override
@@ -35,7 +34,7 @@ public class ColaActivity extends AppCompatActivity {
         mRespostaEVerdadeira = getIntent().getBooleanExtra(EXTRA_REPOSTA_E_VERDADEIRA, false);
 
         mTextViewResposta = (TextView) findViewById(R.id.view_texto_resposta);
-        mBotaoMostraResposta = (Button) findViewById(R.id.botao_mostra_resposta);
+        Button mBotaoMostraResposta = (Button) findViewById(R.id.botao_mostra_resposta);
         mBotaoMostraResposta.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

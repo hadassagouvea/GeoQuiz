@@ -1,7 +1,7 @@
 package com.example.geoquiz_v4_sqlite;
 
 import androidx.appcompat.app.AppCompatActivity;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -21,29 +21,22 @@ import android.widget.Toast;
  */
 
 public class MainActivity extends AppCompatActivity {
-    private Button mBotaoVerdadeiro;
-    private Button mBotaoFalso;
-    private Button mBotaoProximo;
-    private Button mBotaoCadastra;
-    private Button mBotaoMostra;
-    private Button mBotaoDeleta;
-
-    private Button mBotaoCola;
 
     private TextView mTextViewQuestao;
     private TextView mTextViewQuestoesArmazenadas;
 
     private static final String TAG = "QuizActivity";
     private static final String CHAVE_INDICE = "INDICE";
+    private static final int CODIGO_REGISTRO_RESPOSTA = 1; 
     private static final int CODIGO_REQUISICAO_COLA = 0;
 
-    private Questao[] mBancoDeQuestoes = new Questao[]{
+    private final Questao[] mBancoDeQuestoes = new Questao[]{
             new Questao(R.string.questao_suez, true),
             new Questao(R.string.questao_alemanha, false)
     };
 
     QuestaoDB mQuestoesDb;
-
+    RespostaDB mRespostaDb;
     private int mIndiceAtual = 0;
 
     private boolean mEhColador;
@@ -57,26 +50,34 @@ public class MainActivity extends AppCompatActivity {
             mIndiceAtual = instanciaSalva.getInt(CHAVE_INDICE, 0);
         }
 
+        if (mQuestoesDb == null) {
+            mQuestoesDb = new QuestaoDB(getBaseContext());
+        }
+
+        if (mRespostaDb == null) {
+            mRespostaDb = new RespostaDB(getBaseContext());
+        }
+
         mTextViewQuestao = (TextView) findViewById(R.id.view_texto_da_questao);
         atualizaQuestao();
 
-        mBotaoVerdadeiro = (Button) findViewById(R.id.botao_verdadeiro);
+        Button mBotaoVerdadeiro = (Button) findViewById(R.id.botao_verdadeiro);
         // utilização de classe anônima interna
         mBotaoVerdadeiro.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                verificaResposta(true);
+                registraResposta(true);
             }
         });
 
-        mBotaoFalso = (Button) findViewById(R.id.botao_falso);
+        Button mBotaoFalso = (Button) findViewById(R.id.botao_falso);
         mBotaoFalso.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                verificaResposta(false);
+                registraResposta(false);
             }
         });
-        mBotaoProximo = (Button) findViewById(R.id.botao_proximo);
+        Button mBotaoProximo = (Button) findViewById(R.id.botao_proximo);
         mBotaoProximo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mBotaoCola = (Button) findViewById(R.id.botao_cola);
+        Button mBotaoCola = (Button) findViewById(R.id.botao_cola);
         mBotaoCola.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -99,51 +100,35 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mBotaoCadastra = (Button) findViewById(R.id.botao_cadastra);
-        mBotaoCadastra.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*
-                  Acesso ao SQLite
-                */
-                if (mQuestoesDb == null) {
-                    mQuestoesDb = new QuestaoDB(getBaseContext());
-                }
-                int indice = 0;
-                mQuestoesDb.addQuestao(mBancoDeQuestoes[indice++]);
-                mQuestoesDb.addQuestao(mBancoDeQuestoes[indice++]);
-            }
-        });
-
         //Cursor cur = mQuestoesDb.queryQuestao ("_id = ?", val);////(null, null);
         //String [] val = {"1"};
-        mBotaoMostra = (Button) findViewById(R.id.botao_mostra_questoes);
+        Button mBotaoMostra = (Button) findViewById(R.id.botao_mostra_questoes);
         mBotaoMostra.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("SetTextI18n")
             @Override
             public void onClick(View view) {
-                /*
-                  Acesso ao SQLite
-                */
                 if (mQuestoesDb == null) return;
                 if (mTextViewQuestoesArmazenadas == null) {
                     mTextViewQuestoesArmazenadas = (TextView) findViewById(R.id.texto_questoes_a_apresentar);
                 } else {
                     mTextViewQuestoesArmazenadas.setText("");
                 }
-                Cursor cursor = mQuestoesDb.queryQuestao(null, null);
+                Cursor cursor = mQuestoesDb.queryRepostas(null, null);
                 if (cursor != null) {
                     if (cursor.getCount() == 0) {
                         mTextViewQuestoesArmazenadas.setText("Nada a apresentar");
                         Log.i("MSGS", "Nenhum resultado");
                     }
-                    //Log.i("MSGS", Integer.toString(cursor.getCount()));
-                    //Log.i("MSGS", "cursor não nulo!");
+
                     try {
                         cursor.moveToFirst();
                         while (!cursor.isAfterLast()) {
-                            String texto = cursor.getString(cursor.getColumnIndex(QuestoesDbSchema.QuestoesTbl.Cols.TEXTO_QUESTAO));
-                            Log.i("MSGS", texto);
+                            int respostaCorreta = cursor.getInt(cursor.getColumnIndex("respostaCorreta"));
+                            String respostaOferecida = cursor.getString(cursor.getColumnIndex("respostaOferecida"));
+                            int colou = cursor.getInt(cursor.getColumnIndex("colou"));
 
+                            String texto = "Correta: " + respostaCorreta + "Oferecida" + respostaOferecida + "Colou" + colou;
+                            Log.i("MSGS", texto);
                             mTextViewQuestoesArmazenadas.append(texto + "\n");
                             cursor.moveToNext();
                         }
@@ -154,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("MSGS", "cursor nulo!");
             }
         });
-        mBotaoDeleta = (Button) findViewById(R.id.botao_deleta);
+
+        Button mBotaoDeleta = (Button) findViewById(R.id.botao_deleta);
         mBotaoDeleta.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -162,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                   Acesso ao SQLite
                 */
                 if (mQuestoesDb != null) {
-                    mQuestoesDb.removeBanco();
+                    mRespostaDb.limpaBanco();
                     if (mTextViewQuestoesArmazenadas == null) {
                         mTextViewQuestoesArmazenadas = (TextView) findViewById(R.id.texto_questoes_a_apresentar);
                     }
@@ -177,6 +163,12 @@ public class MainActivity extends AppCompatActivity {
         int questao = mBancoDeQuestoes[mIndiceAtual].getTextoRespostaId();
         mTextViewQuestao.setText(questao);
     }
+
+    private void registraResposta(boolean respostaCorreta) {
+        Intent intent = new Intent(MainActivity.this, RegistraRespostaActivity.class);
+        intent.putExtra("repostCorreta", respostaCorreta);
+        startActivityForResult(intent, CODIGO_REGISTRO_RESPOSTA);
+    }    
 
     private void verificaResposta(boolean respostaPressionada) {
         boolean respostaCorreta = mBancoDeQuestoes[mIndiceAtual].isRespostaCorreta();
@@ -202,8 +194,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int codigoRequisicao, int codigoResultado, Intent dados) {
+        super.onActivityResult(codigoRequisicao, codigoResultado, dados);
         if (codigoResultado != Activity.RESULT_OK) {
             return;
+        }
+        if (codigoRequisicao == CODIGO_REGISTRO_RESPOSTA) {
+            boolean respostaPressionada = dados.getBooleanExtra("respostaPressionada", false);
+            verificaResposta(respostaPressionada);
         }
         if (codigoRequisicao == CODIGO_REQUISICAO_COLA) {
             if (dados == null) {

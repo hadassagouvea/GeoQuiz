@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.geoquiz_v4_sqlite">
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -10,17 +9,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GeoQuiz">
         <activity
-            android:name="com.example.geoquiz_v4_sqlite.ColaActivity"
-            android:exported="true" />
-        <activity
             android:name="com.example.geoquiz_v4_sqlite.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.example.geoquiz_v4_sqlite.ColaActivity"
+            android:exported="true" />
+        <activity
+            android:name="com.example.geoquiz_v4_sqlite.RegistraRespostaActivity"
+            android:exported="true" />
     </application>
-
 </manifest>

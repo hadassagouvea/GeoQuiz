@@ -2,11 +2,12 @@ package com.example.geoquiz_v4_sqlite;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class QuestoesDBHelper extends SQLiteOpenHelper {
-    private static final int VERSAO = 1;
+    private static final int VERSAO = 3;
     private static final String NOME_DATABASE = "questoesDB";
 
     public QuestoesDBHelper(Context context) {
@@ -27,5 +28,15 @@ public class QuestoesDBHelper extends SQLiteOpenHelper {
             // Política de upgrade é simplesmente descartar o conteúdo e começar novamente
             db.execSQL("DROP TABLE IF EXISTS " + QuestoesDbSchema.QuestoesTbl.NOME);
             onCreate(db);
+    }
+
+    public Cursor QueryRepostas(String selection, String[] selectionArgs) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.query("Resposta", null, selection, selectionArgs, null, null, null);
+    }
+
+    public void LimpaRespostas() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM Resposta");
     }
 }
