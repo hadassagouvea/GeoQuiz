@@ -10,6 +10,7 @@ public class QuestaoDB {
     private Context mContext;
     private static Context mStaticContext;
     private SQLiteDatabase mDatabase;
+    private QuestoesDBHelper mDbHelper;
 
     public QuestaoDB(Context contexto){
         mContext = contexto.getApplicationContext();
@@ -36,6 +37,7 @@ public class QuestaoDB {
        // mDatabase.update(QuestoesDbSchema.QuestoesTbl.NOME, valores, QuestoesDbSchema.QuestoesTbl.Cols.UUID +" = ?",
         //        new String[] {uuidString});
     }
+
     public Cursor queryQuestao(String clausulaWhere, String[] argsWhere){
         Cursor cursor = mDatabase.query(QuestoesDbSchema.QuestoesTbl.NOME,
                 null,  // todas as colunas
@@ -47,10 +49,12 @@ public class QuestaoDB {
                 );
                 return cursor;
     }
-    void removeBanco(){
-        int delete;
-        delete = mDatabase.delete(
-                QuestoesDbSchema.QuestoesTbl.NOME,
-                null, null);
+
+    public Cursor queryRepostas(String selection, String[] selectionArgs) {
+        return mDbHelper.QueryRepostas(selection, selectionArgs);
+    }
+
+    public void removeBanco() {
+        mDbHelper.LimpaRespostas();
     }
 }
